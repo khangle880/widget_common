@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <p>The response of the server to submitting the form is printed in the console (CTRL+SHIFT+I in Chrome).</p>
+    <form id="form">
+      <input type="file" name="file" multiple id="input-files" class="form-control-file border" />
+      <label for="description">Description:</label>
+      <input type="text" name="description" />
+      <label for="fileLocation">File Location:</label>
+      <input type="text" name="fileLocation" />
+      <label for="factory">Factory:</label>
+      <input type="text" name="factory" />
+      <label for="flow">Flow:</label>
+      <input type="text" name="flow" />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="data"></div>
+    <script>
+      (function () {
+        form.addEventListener('submit', function (e) {
+          // Prevent default behavior
+          e.preventDefault();
+          // Create new FormData object
+          const formData = new FormData(form);
+          // Convert formData object to URL-encoded string
+          const payload = new URLSearchParams(formData);
+          const file = document.getElementById('input-files').value;
+          // Post the payload using Fetch
+          fetch('https://widgetshare.herokuapp.com/v1/photos', {
+            method: 'POST',
+            body: formData,
+            enctype: 'multipart/form-data',
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log(data);
+              payload.set('photoUrls', data['urls']);
+              fetch('https://widgetshare.herokuapp.com/v1/widget', {
+                method: 'POST',
+                body: payload,
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log(data);
+                });
+            });
+        });
+      })();
+    </script>
+    <script>
+      fetch('https://widgetshare.herokuapp.com/v1/widget').then((res) => {
+        res.json().then((data) => {
+          console.log(data.results);
+          if (data.results.length > 0) {
+            var temp = '';
+            data.results.forEach((itemData) => {
+              temp += '<tr>';
+              temp += '<td>' + itemData.fileLocation + '</td>';
+              temp += '<td>' + itemData.factory + '</td>';
+              temp += '<td>' + itemData.flow + '</td></tr>';
+            });
+            document.getElementById('data').innerHTML = temp;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
